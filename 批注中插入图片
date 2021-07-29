@@ -1,0 +1,87 @@
+'======================================================
+'将单元格中的图片插入到单元格的批注中，并将原图片调整为
+'适应单元格的大小。
+'======================================================
+Sub 图片批注()
+
+    Dim PicDir As String '图片临时存放路径
+    Dim Picture As Variant
+    Dim H As Single, W As Single
+    Dim PicName As String
+    Dim Cell As Range '图片所在单元格
+    Dim i As Integer
+    Dim nZoom As Integer     '显示比例数据
+    Dim PicReserve As Integer
+    Dim WidthEdge As Integer
+    
+   
+    Application.ScreenUpdating = False
+    
+    PicReserve = 1
+    WidthEdge = 600 '设置最大宽度
+
+    '保存当前的显示比例
+    nZoom = ActiveWindow.Zoom
+    '显示比例调整为100%
+    ActiveWindow.Zoom = 100
+    '设置图片临时存放路径
+    PicDir = Environ("TEMP") & "\"
+    '遍历所有shapes
+    With ActiveSheet
+        For i = 1 To .Shapes.Count
+            With .Shapes(i)
+                If .Type = msoPicture Then '如果是图片
+                    .ScaleHeight 1, msoTrue '图片恢复原尺寸
+                    .ScaleWidth 1, msoTrue
+                    
+                    '设置宽度尺寸不超过WidthEdge
+                    If .Width > WidthEdge Then _
+                        .ScaleHeight WidthEdge / .Width, msoTrue
+                    
+                    H = .Height '保存图片的长宽尺寸
+                    W = .Width
+                    PicName = .Name '设置导出图片的名称
+                    '导出图片
+                    .Select
+                    Selection.Copy
+
+                    Set Picture = ActiveSheet.ChartObjects.Add(0, 0, W, H).Chart
+                    Picture.Parent.Select
+                    Picture.Paste
+           
+                    Picture.Export PicDir & PicName, "BMP"
+                    Picture.Parent.Delete
+                    Set Cell = .TopLeftCell '设置插入批注的单元格
+                    '删除单元格中的原始批注
+                    If Not Cell.Comment Is Nothing Then Cell.Comment.Delete
+                    Cell.AddComment
+                    '如果PicReserve=0,则删除单元格中图片
+                    If PicReserve = 0 Then
+                        .Delete
+                    Else
+                        '重新设置图片的尺寸及位置
+                        .Height = .Height / Application.Max(.Height / Cell.Height, .Width / Cell.Width) - 1
+                        .Top = Cell.Top + 1
+                        .Left = Cell.Left + 1
+                    End If
+                    '批注中插入图片
+                    Set Picture = Cell.Comment.Shape
+                    Picture.Fill.UserPicture PicDir & PicName
+                    Picture.Height = H + 1
+                    Picture.Width = W + 1
+                    Picture.Shadow.Visible = False
+                    Picture.Line.Visible = msoFalse
+                    '删除临时保存的图片
+                    Kill PicDir & PicName
+                End If
+            End With
+            
+        Next
+    End With
+    '设置批注显示方式
+    Application.DisplayCommentIndicator = xlCommentIndicatorOnly
+    '还原显示比例
+    ActiveWindow.Zoom = nZoom
+    Application.ScreenUpdating = True
+    
+End Sub

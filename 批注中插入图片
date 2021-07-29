@@ -3,7 +3,6 @@
 '适应单元格的大小。
 '======================================================
 Sub 图片批注()
-
     Dim PicDir As String '图片临时存放路径
     Dim Picture As Variant
     Dim H As Single, W As Single
@@ -13,10 +12,8 @@ Sub 图片批注()
     Dim nZoom As Integer     '显示比例数据
     Dim PicReserve As Integer
     Dim WidthEdge As Integer
-    
-   
-    Application.ScreenUpdating = False
-    
+       
+    Application.ScreenUpdating = False    
     PicReserve = 1
     WidthEdge = 600 '设置最大宽度
 
@@ -47,10 +44,10 @@ Sub 图片批注()
 
                     Set Picture = ActiveSheet.ChartObjects.Add(0, 0, W, H).Chart
                     Picture.Parent.Select
-                    Picture.Paste
-           
+                    Picture.Paste           
                     Picture.Export PicDir & PicName, "BMP"
                     Picture.Parent.Delete
+                    
                     Set Cell = .TopLeftCell '设置插入批注的单元格
                     '删除单元格中的原始批注
                     If Not Cell.Comment Is Nothing Then Cell.Comment.Delete
@@ -80,8 +77,8 @@ Sub 图片批注()
     End With
     '设置批注显示方式
     Application.DisplayCommentIndicator = xlCommentIndicatorOnly
+    
     '还原显示比例
     ActiveWindow.Zoom = nZoom
-    Application.ScreenUpdating = True
-    
+    Application.ScreenUpdating = True    
 End Sub
